@@ -322,8 +322,8 @@ internal static class SkinsLibrary
         //if (StyleExists(SkinToAction, StyleID))
         if (lstTemp.Any(x => x.name == NewStyle.name))
         {
-            GUIStyle styleTemp = lstTemp.First(x => x.name == NewStyle.name);
-            styleTemp = NewStyle;
+            // this is weird and probably a bug
+            lstTemp.First(x => x.name == NewStyle.name);
         }
         else
         {
