@@ -32,9 +32,11 @@
     <Reference Include="System" />
     <Reference Include="UnityEngine">
       <HintPath>KSP_linux\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>KSP_linux\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +46,7 @@
     <Compile Include="ksppluginframework\MonoBehaviourExtended.cs" />
     <Compile Include="ksppluginframework\MonoBehaviourWindow.cs" />
     <Compile Include="ksppluginframework\SkinsLibrary.cs" />
+    <Compile Include="main.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
