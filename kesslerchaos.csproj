@@ -9,6 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>kesslerchaos</RootNamespace>
     <AssemblyName>kesslerchaos</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,7 +30,6 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
     <Reference Include="UnityEngine">
       <HintPath>KSP_linux\KSP_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
@@ -38,6 +38,7 @@
       <HintPath>KSP_linux\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -47,6 +48,7 @@
     <Compile Include="ksppluginframework\MonoBehaviourWindow.cs" />
     <Compile Include="ksppluginframework\SkinsLibrary.cs" />
     <Compile Include="main.cs" />
+    <Compile Include="AutoLoadSaveOnStartup.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

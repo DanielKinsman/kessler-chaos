@@ -1,5 +1,7 @@
 KSP_linux
+runksp
 bin
 ksppluginframework/Examples
 ksppluginframework/Examples-InProgress
 KSP.log
+*.userprefs
