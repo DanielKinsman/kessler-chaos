@@ -12,7 +12,7 @@ namespace kesslerchaos
 		public float speed = -500.0f;
 		public float longitudinalSpread = 1000.0f;
 		public float lateralSpread = 100.0f;
-		public float longitudinalVelocitySpread = 400.0f;
+		public float longitudinalVelocitySpread = 250.0f;
 		public float lateralVelocitySpread = 100.0f;
 		public int spawnCount = 25;
 		public float repeatRate = 0.25f;
@@ -29,6 +29,12 @@ namespace kesslerchaos
             StartRepeatingWorker();
 			shrapnel = new Queue<GameObject>(maxShrapnel);
         }
+
+		internal override void OnDestroy()
+		{
+			base.OnDestroy();
+			this.shrapnel.Clear();
+		}
 
         internal override void RepeatingWorker()
         {
@@ -55,17 +61,19 @@ namespace kesslerchaos
 					else
 					{
 						shrap = this.shrapnel.Dequeue();
+						shrap.rigidbody.angularVelocity = Vector3.zero;
+						shrap.transform.rotation = new Quaternion();
 					}
 
 					shrap.transform.position = FlightGlobals.ActiveVessel.transform.position;
 					shrap.transform.Translate(500.0f + UnityEngine.Random.value*longitudinalSpread, (UnityEngine.Random.value-0.5f)*lateralSpread, (UnityEngine.Random.value-0.5f)*lateralSpread);
 					shrap.rigidbody.velocity = new Vector3(this.speed + (UnityEngine.Random.value-0.5f)*longitudinalVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread);
+					shrap.rigidbody.angularVelocity = new Vector3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
 					this.shrapnel.Enqueue(shrap);
 				}
 
 				//todo taper spawn rate at start and end of event
 				//todo smaller cone for rigidbodies, purely graphical ones further out
-				//todo make sure we free up memory on shutdown
 			}
 			catch(Exception e)
 			{
