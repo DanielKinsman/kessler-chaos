@@ -5,3 +5,4 @@ ksppluginframework/Examples
 ksppluginframework/Examples-InProgress
 KSP.log
 *.userprefs
+revertsave.sh
