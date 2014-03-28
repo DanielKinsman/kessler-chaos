@@ -14,7 +14,7 @@ namespace kesslerchaos
             //Create a Child Object
             gameObject.AddComponent<MBExtendedChild>();
 
-            //Start the repeating worker to fire once each second
+            //Start the repeating worker to fire x times each second
             StartRepeatingWorker(1);
         }
 
@@ -22,12 +22,22 @@ namespace kesslerchaos
         {
 			try
 			{
-	            LogFormatted("Last RepeatFunction Ran for: {0}ms",RepeatingWorkerDuration.TotalMilliseconds);
-	            LogFormatted("UT Since Last RepeatFunction: {0}",RepeatingWorkerUTPeriod);
+				// get ship transform
+				// set shrapnel transform to ship transform
+				// move it away a distance
+				// give it a shove towards the ship
+				// splosions
+
+				var shrapnel = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+				shrapnel.transform.position = FlightGlobals.ActiveVessel.transform.position;
+				shrapnel.transform.Translate(10.0f, 0.0f, 0.0f);
+				shrapnel.AddComponent ("Rigidbody");
+				shrapnel.rigidbody.useGravity = false;
+				shrapnel.rigidbody.velocity = new Vector3(-1.0f, 0.0f, 0.0f);
 			}
 			catch(Exception e)
 			{
-				LogFormatted("You fucked up dan: {0}", e);
+				LogFormatted_DebugOnly("You fucked up: {0}", e);
 				throw;
 			}
         }
