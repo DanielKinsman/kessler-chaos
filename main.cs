@@ -9,15 +9,16 @@ namespace kesslerchaos
     public class MBExtended : MonoBehaviourWindow
     {
 		public bool fire = false;
-		public float speed = -500.0f;
+		public float speed = 500.0f;
 		public float longitudinalSpread = 1000.0f;
-		public float lateralSpread = 100.0f;
+		public float lateralSpread = 200.0f;
 		public float longitudinalVelocitySpread = 250.0f;
 		public float lateralVelocitySpread = 100.0f;
 		public int spawnCount = 25;
 		public float repeatRate = 0.25f;
 		public int maxShrapnel = 500;
 		private Queue<GameObject> shrapnel;
+		public Vector3 debrisOrigin;
 
         internal override void Awake()
         {
@@ -40,12 +41,6 @@ namespace kesslerchaos
         {
 			try
 			{
-				// get ship transform
-				// set shrapnel transform to ship transform
-				// move it away a distance
-				// give it a shove towards the ship
-				// splosions
-
 				if(!this.fire)
 					return;
 
@@ -65,9 +60,18 @@ namespace kesslerchaos
 						shrap.transform.rotation = new Quaternion();
 					}
 
-					shrap.transform.position = FlightGlobals.ActiveVessel.transform.position;
-					shrap.transform.Translate(500.0f + UnityEngine.Random.value*longitudinalSpread, (UnityEngine.Random.value-0.5f)*lateralSpread, (UnityEngine.Random.value-0.5f)*lateralSpread);
-					shrap.rigidbody.velocity = new Vector3(this.speed + (UnityEngine.Random.value-0.5f)*longitudinalVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread);
+					// get ship transform
+					// set shrapnel transform to ship transform
+					// move it away a distance
+					// give it a shove towards the ship
+					// splosions
+
+					shrap.transform.position = FlightGlobals.ActiveVessel.transform.position + debrisOrigin;
+					shrap.transform.LookAt(FlightGlobals.ActiveVessel.transform.position);
+					// forward is (0, 0, 1)
+					shrap.transform.Translate((UnityEngine.Random.value-0.5f)*lateralSpread, (UnityEngine.Random.value-0.5f)*lateralSpread, UnityEngine.Random.value*longitudinalSpread);
+					shrap.rigidbody.velocity = shrap.transform.TransformDirection((UnityEngine.Random.value-0.5f)*lateralVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread, this.speed + (UnityEngine.Random.value-0.5f)*longitudinalVelocitySpread);
+
 					shrap.rigidbody.angularVelocity = new Vector3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
 					this.shrapnel.Enqueue(shrap);
 				}
@@ -82,14 +86,28 @@ namespace kesslerchaos
 			}
         }
 
-		internal override void DrawWindow(int id)
-        {
+		public void NewEvent()
+		{
+			// set origin
+			// set duration
+			// set severity
+
+			debrisOrigin = new Vector3(UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f);
+			debrisOrigin.Normalize();
+			debrisOrigin *= 2000.0f;
+		}
+
+		internal override void DrawWindow (int id)
+		{
 			DragEnabled = true;
-            ClampToScreen = true;
+			ClampToScreen = true;
 			TooltipsEnabled = false;
 
-			if(GUILayout.Button("Fire!"))
+			if (GUILayout.Button ("Fire!"))
+			{
+				NewEvent();
 				this.fire = !this.fire;
+			}
 
 			GUILayout.Label(String.Format("Fire? {0}", this.fire.ToString()));
 
