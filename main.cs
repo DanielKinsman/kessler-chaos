@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KSP;
 using UnityEngine;
 
@@ -15,6 +16,8 @@ namespace kesslerchaos
 		public float lateralVelocitySpread = 100.0f;
 		public int spawnCount = 25;
 		public float repeatRate = 0.25f;
+		public int maxShrapnel = 500;
+		private Queue<GameObject> shrapnel;
 
         internal override void Awake()
         {
@@ -24,6 +27,7 @@ namespace kesslerchaos
 
 			SetRepeatRate(repeatRate);
             StartRepeatingWorker();
+			shrapnel = new Queue<GameObject>(maxShrapnel);
         }
 
         internal override void RepeatingWorker()
@@ -41,16 +45,27 @@ namespace kesslerchaos
 
 				for(int i = 0; i < spawnCount; i++)
 				{
-					var shrapnel = GameObject.CreatePrimitive(PrimitiveType.Cube);
-					shrapnel.transform.position = FlightGlobals.ActiveVessel.transform.position;
-					shrapnel.transform.Translate(500.0f + UnityEngine.Random.value*longitudinalSpread, (UnityEngine.Random.value-0.5f)*lateralSpread, (UnityEngine.Random.value-0.5f)*lateralSpread);
-					shrapnel.AddComponent ("Rigidbody");
-					shrapnel.rigidbody.useGravity = false;
-					shrapnel.rigidbody.velocity = new Vector3(this.speed + (UnityEngine.Random.value-0.5f)*longitudinalVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread);
+					GameObject shrap;
+					if(shrapnel.Count < maxShrapnel)
+					{
+						shrap = GameObject.CreatePrimitive(PrimitiveType.Cube);
+						shrap.AddComponent ("Rigidbody");
+						shrap.rigidbody.useGravity = false;
+					}
+					else
+					{
+						shrap = this.shrapnel.Dequeue();
+					}
+
+					shrap.transform.position = FlightGlobals.ActiveVessel.transform.position;
+					shrap.transform.Translate(500.0f + UnityEngine.Random.value*longitudinalSpread, (UnityEngine.Random.value-0.5f)*lateralSpread, (UnityEngine.Random.value-0.5f)*lateralSpread);
+					shrap.rigidbody.velocity = new Vector3(this.speed + (UnityEngine.Random.value-0.5f)*longitudinalVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread);
+					this.shrapnel.Enqueue(shrap);
 				}
 
-				//todo recycle them when they get too far away
 				//todo taper spawn rate at start and end of event
+				//todo smaller cone for rigidbodies, purely graphical ones further out
+				//todo make sure we free up memory on shutdown
 			}
 			catch(Exception e)
 			{
