@@ -14,11 +14,15 @@ namespace kesslerchaos
 		public float lateralSpread = 200.0f;
 		public float longitudinalVelocitySpread = 250.0f;
 		public float lateralVelocitySpread = 100.0f;
-		public int spawnCount = 25;
+		public int maxSpawnCount = 25;
 		public float repeatRate = 0.25f;
+		public float idleRepeatRate = 60.0f;
 		public int maxShrapnel = 500;
 		private Queue<GameObject> shrapnel;
 		public Vector3 debrisOrigin;
+		public float duration = 30.0f;
+		public DateTime eventStart;
+		public float intensity = 1.0f;
 
         internal override void Awake()
         {
@@ -29,6 +33,7 @@ namespace kesslerchaos
 			SetRepeatRate(repeatRate);
             StartRepeatingWorker();
 			shrapnel = new Queue<GameObject>(maxShrapnel);
+			eventStart = DateTime.MinValue;
         }
 
 		internal override void OnDestroy()
@@ -41,8 +46,22 @@ namespace kesslerchaos
         {
 			try
 			{
-				if(!this.fire)
+				var elapsed = DateTime.UtcNow - eventStart;
+				if(elapsed.TotalSeconds > this.duration)
+				{
+					// Avoid settign the repeat rate unnecessarily as it
+					// restarts the worker
+					if(this.RepeatingWorkerRate != idleRepeatRate)
+						SetRepeatRate(idleRepeatRate);
+
+					// todo clean up shrapnel
+
 					return;
+				}
+
+				var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed.TotalSeconds);
+				var spawnRateModifier = 1.0f - (timeFromPeakIntensity / (duration/2.0f));
+				var spawnCount = (int)Math.Ceiling((maxSpawnCount * intensity) * spawnRateModifier);
 
 				for(int i = 0; i < spawnCount; i++)
 				{
@@ -52,6 +71,7 @@ namespace kesslerchaos
 						shrap = GameObject.CreatePrimitive(PrimitiveType.Cube);
 						shrap.AddComponent ("Rigidbody");
 						shrap.rigidbody.useGravity = false;
+						shrap.rigidbody.mass = 0.03f;
 					}
 					else
 					{
@@ -76,6 +96,7 @@ namespace kesslerchaos
 					this.shrapnel.Enqueue(shrap);
 				}
 
+				//todo use simulation time not wall clock time
 				//todo taper spawn rate at start and end of event
 				//todo smaller cone for rigidbodies, purely graphical ones further out
 			}
@@ -95,6 +116,14 @@ namespace kesslerchaos
 			debrisOrigin = new Vector3(UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f);
 			debrisOrigin.Normalize();
 			debrisOrigin *= 2000.0f;
+			intensity = 1.0f;
+			duration = 30.0f;
+			eventStart = DateTime.UtcNow;
+
+			// Avoid settign the repeat rate unnecessarily as it
+			// restarts the worker
+			if(this.RepeatingWorkerRate != repeatRate)
+				SetRepeatRate(repeatRate);
 		}
 
 		internal override void DrawWindow (int id)
@@ -104,16 +133,11 @@ namespace kesslerchaos
 			TooltipsEnabled = false;
 
 			if (GUILayout.Button ("Fire!"))
-			{
 				NewEvent();
-				this.fire = !this.fire;
-			}
-
-			GUILayout.Label(String.Format("Fire? {0}", this.fire.ToString()));
 
 			GUILayout.BeginHorizontal();
-            GUILayout.Label("spawn count");
-            this.spawnCount=Convert.ToInt32(GUILayout.TextField(this.spawnCount.ToString()));
+            GUILayout.Label("max spawn count");
+            this.maxSpawnCount=Convert.ToInt32(GUILayout.TextField(this.maxSpawnCount.ToString()));
             GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
