@@ -67,6 +67,7 @@ namespace kesslerchaos
         {
 			try
 			{
+				//todo use simulation time not wall clock time
 				var elapsed = DateTime.UtcNow - eventStart;
 				if(elapsed.TotalSeconds > this.duration)
 				{
@@ -80,16 +81,22 @@ namespace kesslerchaos
 					return;
 				}
 
+				// Modify the number of debris particles spawned depending on if we are
+				// at the beginning, middle or end of the encounter.
+				// More in the middle, less at either end.
 				var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed.TotalSeconds);
 				var spawnRateModifier = 1.0f - (timeFromPeakIntensity / (duration/2.0f));
 				var spawnCount = (int)Math.Ceiling((maxSpawnCount * intensity) * spawnRateModifier);
 
 				for(int i = 0; i < spawnCount; i++)
 				{
+					// Recycle old shrapnel particles using a queue so we don't put too much load
+					// on the physics / rendering engines.
 					GameObject shrap;
 					if(shrapnel.Count < maxShrapnel)
 					{
 						shrap = GameObject.CreatePrimitive(PrimitiveType.Cube);
+						shrap.name = "Kessler chaos debris";
 						shrap.AddComponent ("Rigidbody");
 						shrap.rigidbody.useGravity = false;
 						shrap.rigidbody.mass = 0.03f;
@@ -109,17 +116,21 @@ namespace kesslerchaos
 
 					shrap.transform.position = FlightGlobals.ActiveVessel.transform.position + debrisOrigin;
 					shrap.transform.LookAt(FlightGlobals.ActiveVessel.transform.position);
-					// forward is (0, 0, 1)
-					shrap.transform.Translate((UnityEngine.Random.value-0.5f)*lateralSpread, (UnityEngine.Random.value-0.5f)*lateralSpread, UnityEngine.Random.value*longitudinalSpread);
-					shrap.rigidbody.velocity = shrap.transform.TransformDirection((UnityEngine.Random.value-0.5f)*lateralVelocitySpread, (UnityEngine.Random.value-0.5f)*lateralVelocitySpread, this.speed + (UnityEngine.Random.value-0.5f)*longitudinalVelocitySpread);
 
-					shrap.rigidbody.angularVelocity = new Vector3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+					// forward is (0, 0, 1)
+					shrap.transform.Translate(
+						RandomPlusOrMinus() * lateralSpread,
+						RandomPlusOrMinus() * lateralSpread,
+						UnityEngine.Random.value * longitudinalSpread);
+
+					shrap.rigidbody.velocity = shrap.transform.TransformDirection(
+						RandomPlusOrMinus() * lateralVelocitySpread,
+						RandomPlusOrMinus() * lateralVelocitySpread,
+						this.speed + RandomPlusOrMinus() * longitudinalVelocitySpread);
+
+					shrap.rigidbody.angularVelocity = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
 					this.shrapnel.Enqueue(shrap);
 				}
-
-				//todo use simulation time not wall clock time
-				//todo taper spawn rate at start and end of event
-				//todo smaller cone for rigidbodies, purely graphical ones further out
 			}
 			catch(Exception e)
 			{
@@ -128,13 +139,16 @@ namespace kesslerchaos
 			}
         }
 
+		/// <summary>
+		/// Sets up a new debris cloud encounter.
+		/// </summary>
 		public void NewEvent()
 		{
 			// set origin
 			// set duration
 			// set severity
 
-			debrisOrigin = new Vector3(UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f);
+			debrisOrigin = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
 			debrisOrigin.Normalize();
 			debrisOrigin *= 2000.0f;
 			intensity = 1.0f;
@@ -145,6 +159,15 @@ namespace kesslerchaos
 			// restarts the worker
 			if(this.RepeatingWorkerRate != repeatRate)
 				SetRepeatRate(repeatRate);
+		}
+
+		/// <summary>
+		/// Counts the debris in the current sphere of influence.
+		/// </summary>
+		public int CountDebris ()
+		{
+			// todo implement
+			return 0;
 		}
 
 		internal override void DrawWindow (int id)
@@ -193,5 +216,10 @@ namespace kesslerchaos
             this.lateralVelocitySpread=(float)Convert.ToDouble(GUILayout.TextField(this.lateralVelocitySpread.ToString()));
             GUILayout.EndHorizontal();
         }
+
+		public static float RandomPlusOrMinus()
+		{
+			return UnityEngine.Random.value - 0.5f;
+		}
     }
 }
