@@ -51,7 +51,7 @@ namespace kesslerchaos
             WindowRect = new Rect(0, 0, 250, 50);
             Visible = true;
 
-			SetRepeatRate(repeatRate);
+			SetRepeatRate(idleRepeatRate);
             StartRepeatingWorker();
 			shrapnel = new Queue<GameObject>(maxShrapnel);
 			eventStart = DateTime.MinValue;
@@ -187,8 +187,6 @@ namespace kesslerchaos
 			GUILayout.BeginHorizontal();
             GUILayout.Label("repeat rate");
             this.repeatRate=(float)Convert.ToDouble(GUILayout.TextField(this.repeatRate.ToString()));
-			if(this.repeatRate != this.RepeatingWorkerRate)
-				SetRepeatRate(repeatRate);
             GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
