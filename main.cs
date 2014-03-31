@@ -44,6 +44,7 @@ namespace kesslerchaos
 		public float duration = 30.0f;
 		public DateTime eventStart;
 		public float intensity = 1.0f;
+		public int worstDebrisCount = 250;
 
         internal override void Awake()
         {
@@ -142,17 +143,22 @@ namespace kesslerchaos
 		/// <summary>
 		/// Sets up a new debris cloud encounter.
 		/// </summary>
-		public void NewEvent()
+		public void NewDebrisEncounter()
 		{
 			// set origin
 			// set duration
 			// set severity
 
+			var debrisCount = CountDebris();
+
 			debrisOrigin = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
 			debrisOrigin.Normalize();
 			debrisOrigin *= 2000.0f;
-			intensity = 1.0f;
+			intensity = Math.Min(1.0f, debrisCount / (float)worstDebrisCount);
 			duration = 30.0f;
+
+			LogFormatted("Debris cloud encountered, intensity {0}, duration {1}", intensity, duration);
+
 			eventStart = DateTime.UtcNow;
 
 			// Avoid settign the repeat rate unnecessarily as it
@@ -164,10 +170,13 @@ namespace kesslerchaos
 		/// <summary>
 		/// Counts the debris in the current sphere of influence.
 		/// </summary>
-		public int CountDebris ()
+		public int CountDebris()
 		{
-			// todo implement
-			return 0;
+			var debris = FlightGlobals.Vessels.FindAll(
+				x => x.vesselType == VesselType.Debris &&
+				x.orbitDriver.referenceBody.Equals(FlightGlobals.ActiveVessel.orbitDriver.referenceBody));
+
+			return debris.Count;
 		}
 
 		internal override void DrawWindow (int id)
@@ -177,11 +186,16 @@ namespace kesslerchaos
 			TooltipsEnabled = false;
 
 			if (GUILayout.Button ("Fire!"))
-				NewEvent();
+				NewDebrisEncounter();
 
 			GUILayout.BeginHorizontal();
             GUILayout.Label("max spawn count");
             this.maxSpawnCount=Convert.ToInt32(GUILayout.TextField(this.maxSpawnCount.ToString()));
+            GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+            GUILayout.Label("maximum kessler syndrome at debris count of:");
+            this.worstDebrisCount=Convert.ToInt32(GUILayout.TextField(this.worstDebrisCount.ToString()));
             GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
