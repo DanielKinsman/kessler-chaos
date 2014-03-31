@@ -75,9 +75,65 @@ namespace kesslerchaos
 					// Avoid settign the repeat rate unnecessarily as it
 					// restarts the worker
 					if(this.RepeatingWorkerRate != idleRepeatRate)
+					{
+						// We just finished a debris cloud encounter
 						SetRepeatRate(idleRepeatRate);
+						// todo clean up shrapnel
+						return;
+					}
 
-					// todo clean up shrapnel
+					// See if we should spawn a new debris cloud encounter:
+					// 	* no encounter in atmosphere or below max terrain height
+					// 	* higher likelyhood the lower you are
+					// 	* higher likelyhood depending on CountDebris() and worstDebrisCount
+					// 	* higher likelyhood the longer it's been since the last debris cloud encounter
+
+					if(FlightGlobals.ActiveVessel.atmDensity > 0.0)
+						return;
+
+					// Should be using time warp altitudes to determine the correct thresholds here,
+					// but the ksp API is a dog's breakfast.
+					// This hack isn't much better and will break under different cultures,
+					// future updates, real solar system mod. planet factory mod etc.
+					// todo fix it!
+					var thresholds = new Dictionary<string, double>()
+					{
+						{"Kerbol", 3270000.0},
+						{"Moho", 10000.0},
+						{"Eve", 97000.0},
+						{"Gilly", 8000.0},
+						{"Kerbin", 70000.0},
+						{"Mun", 5000.0},
+						{"Minmus", 3000.0},
+						{"Duna", 42000.0},
+						{"Ike", 5000.0},
+						{"Dres", 10000.0},
+						{"Jool", 140000.0},
+						{"Laythe", 30000.0},
+						{"Vall", 25000.0},
+						{"Tylo", 30000.0},
+						{"Bop", 25000.0},
+						{"Pol", 5000.0},
+						{"Eeloo", 4000.0}
+					};
+
+					if(FlightGlobals.ship_altitude <= thresholds[FlightGlobals.currentMainBody.bodyName])
+						return;
+
+
+					var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / thresholds[FlightGlobals.currentMainBody.bodyName]);
+					var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);
+					var frequencyMultiplier = Math.Min(1.0f, elapsed.TotalSeconds / (5.0f * 60.0f)); // after 5 minutes bring it on
+					var roll = UnityEngine.Random.value;
+					LogFormatted_DebugOnly("Debris encounter chance {0} * {1} * {2} = {3} > {4}?",
+					                       altitudeMultiplier,
+					                       litterMultiplier,
+					                       frequencyMultiplier,
+					                       altitudeMultiplier * litterMultiplier * frequencyMultiplier,
+					                       roll);
+
+					if(roll <= altitudeMultiplier * litterMultiplier * frequencyMultiplier)
+						NewDebrisEncounter();
 
 					return;
 				}
@@ -174,7 +230,7 @@ namespace kesslerchaos
 		{
 			var debris = FlightGlobals.Vessels.FindAll(
 				x => x.vesselType == VesselType.Debris &&
-				x.orbitDriver.referenceBody.Equals(FlightGlobals.ActiveVessel.orbitDriver.referenceBody));
+				x.orbit.referenceBody.Equals(FlightGlobals.ActiveVessel.orbit.referenceBody));
 
 			return debris.Count;
 		}
