@@ -50,7 +50,10 @@ namespace kesslerchaos
         {
 			WindowCaption = "Kessler Chaos";
             WindowRect = new Rect(0, 0, 250, 50);
-            //Visible = true;
+
+#if DEBUG
+            Visible = true;
+#endif
 
 			SetRepeatRate(idleRepeatRate);
             StartRepeatingWorker();

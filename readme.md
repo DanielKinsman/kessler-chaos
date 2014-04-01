@@ -24,6 +24,7 @@ Upcoming feature wishlist
 
 * Real trajectories for debris clouds rather than random encounters
 * Modeled chain reactions for a proper Kessler Syndrome
+* Better collision detection (possibly slow moving but invisible colliders)
 * Improved graphical effects
 * Sound effects for the small impacts that don't create explosions
 * Block timewarp when encountering a debris cloud (no cheating)
