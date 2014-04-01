@@ -50,7 +50,7 @@ namespace kesslerchaos
         {
 			WindowCaption = "Kessler Chaos";
             WindowRect = new Rect(0, 0, 250, 50);
-            Visible = true;
+            //Visible = true;
 
 			SetRepeatRate(idleRepeatRate);
             StartRepeatingWorker();
@@ -98,7 +98,7 @@ namespace kesslerchaos
 					// todo fix it!
 					var thresholds = new Dictionary<string, double>()
 					{
-						{"Kerbol", 3270000.0},
+						{"Sun", 3270000.0},
 						{"Moho", 10000.0},
 						{"Eve", 97000.0},
 						{"Gilly", 8000.0},
@@ -117,9 +117,27 @@ namespace kesslerchaos
 						{"Eeloo", 4000.0}
 					};
 
+					/*for(int i = 0; i < TimeWarp.fetch.altitudeLimits.Length; i++)
+					{
+						LogFormatted_DebugOnly("i {0}, tw alt limit {1}, tw warp rate {2}, alt limit {3}, mult {4}, offset {5}",
+						                       i,
+						                       TimeWarp.fetch.altitudeLimits[i],
+						                       TimeWarp.fetch.warpRates[i],
+						                       FlightGlobals.currentMainBody.timeWarpAltitudeLimits[i],
+						                       FlightGlobals.currentMainBody.altitudeMultiplier,
+						                       FlightGlobals.currentMainBody.altitudeOffset
+						                       );
+					}*/
+
+
+					if(!thresholds.ContainsKey(FlightGlobals.currentMainBody.bodyName))
+					{
+						LogFormatted("Body {0} doesn't have an entry in this mod, no kessler debris will be created.", FlightGlobals.currentMainBody.bodyName);
+						return;
+					}
+
 					if(FlightGlobals.ship_altitude <= thresholds[FlightGlobals.currentMainBody.bodyName])
 						return;
-
 
 					var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / thresholds[FlightGlobals.currentMainBody.bodyName]);
 					var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);

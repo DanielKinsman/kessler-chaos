@@ -24,10 +24,16 @@ Upcoming feature wishlist
 * Debris detector vessel parts to provide alarms and early warnings
 * Debris mitigation vessel parts such as laser brooms and "deflector dishes"
 
-Installation
-------------
+Build and Installation
+----------------------
 
-Extract the zip to the "GameData" subdirectory of your Kerbal Space Program install.
+Open the solution with monodevelop, make sure the references to
+Assembly-CSharp.dll and UnityEngine.dll come from ksp's
+KSP_Data/Managed/ directory. Build it then copy kesslerchaos.dll from the
+output directory to ksp's GameData folder.
+
+If you've just downloaded the pre-built zip file, extract zip to the
+"GameData" subdirectory of your Kerbal Space Program install.
 
 Licences
 --------
