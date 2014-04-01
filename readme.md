@@ -6,11 +6,18 @@ A mod that adds more deadly space debris to Kerbal Space Program.
 How it works
 ------------
 
-Adds random debris cloud encounters when flying. Both the likelyhood of
-encountering a debris cloud and its severity depend on how much
-normal debris you have floating around in the sphere of influence.
-This should give you an incentive to keep space clean (or not
-depending on your proclivities).
+Adds random debris cloud encounters when flying. The likelyhood of
+encountering a debris cloud depends on:
+
+* how much "normal" debris you have floating around the sphere of
+influence (up to a max of 250)
+* your altitude (more the lower you are, but none below
+atmosphere/terrain)
+* how much time has elapsed since the last debris cloud encounter
+
+Debris clouds are also more intense depending on the amount of
+"normal" debris in the SOI. This should give you an incentive to keep space
+clean (or not depending on your proclivities).
 
 Upcoming feature wishlist
 -------------------------
