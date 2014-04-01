@@ -158,14 +158,12 @@ namespace kesslerchaos
 					return;
 				}
 
-				//todo if in physics time warp, adjust the repeat rate
-
 				// Modify the number of debris particles spawned depending on if we are
 				// at the beginning, middle or end of the encounter.
 				// More in the middle, less at either end.
 				var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed);
 				var spawnRateModifier = 1.0f - (timeFromPeakIntensity / (duration/2.0f));
-				var spawnCount = (int)Math.Ceiling((maxSpawnCount * intensity) * spawnRateModifier);
+				var spawnCount = (int)Math.Ceiling((maxSpawnCount * TimeWarp.CurrentRate * intensity) * spawnRateModifier);
 
 				for(int i = 0; i < spawnCount; i++)
 				{
