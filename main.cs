@@ -42,7 +42,7 @@ namespace kesslerchaos
 		private Queue<GameObject> shrapnel;
 		public Vector3 debrisOrigin;
 		public float duration = 30.0f;
-		public DateTime eventStart;
+		public double eventStart;
 		public float intensity = 1.0f;
 		public int worstDebrisCount = 250;
 
@@ -58,7 +58,7 @@ namespace kesslerchaos
 			SetRepeatRate(idleRepeatRate);
             StartRepeatingWorker();
 			shrapnel = new Queue<GameObject>(maxShrapnel);
-			eventStart = DateTime.MinValue;
+			eventStart = 0.0;
         }
 
 		internal override void OnDestroy()
@@ -71,11 +71,10 @@ namespace kesslerchaos
         {
 			try
 			{
-				//todo use simulation time not wall clock time
-				var elapsed = DateTime.UtcNow - eventStart;
-				if(elapsed.TotalSeconds > this.duration)
+				var elapsed = Planetarium.GetUniversalTime() - eventStart;
+				if(elapsed > this.duration)
 				{
-					// Avoid settign the repeat rate unnecessarily as it
+					// Avoid setting the repeat rate unnecessarily as it
 					// restarts the worker
 					if(this.RepeatingWorkerRate != idleRepeatRate)
 					{
@@ -144,7 +143,7 @@ namespace kesslerchaos
 
 					var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / thresholds[FlightGlobals.currentMainBody.bodyName]);
 					var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);
-					var frequencyMultiplier = Math.Min(1.0f, elapsed.TotalSeconds / (5.0f * 60.0f)); // after 5 minutes bring it on
+					var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
 					var roll = UnityEngine.Random.value;
 					LogFormatted_DebugOnly("Debris encounter chance {0} * {1} * {2} = {3} > {4}?",
 					                       altitudeMultiplier,
@@ -159,10 +158,12 @@ namespace kesslerchaos
 					return;
 				}
 
+				//todo if in physics time warp, adjust the repeat rate
+
 				// Modify the number of debris particles spawned depending on if we are
 				// at the beginning, middle or end of the encounter.
 				// More in the middle, less at either end.
-				var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed.TotalSeconds);
+				var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed);
 				var spawnRateModifier = 1.0f - (timeFromPeakIntensity / (duration/2.0f));
 				var spawnCount = (int)Math.Ceiling((maxSpawnCount * intensity) * spawnRateModifier);
 
@@ -236,9 +237,9 @@ namespace kesslerchaos
 
 			LogFormatted("Debris cloud encountered, intensity {0}, duration {1}", intensity, duration);
 
-			eventStart = DateTime.UtcNow;
+			eventStart = Planetarium.GetUniversalTime();
 
-			// Avoid settign the repeat rate unnecessarily as it
+			// Avoid setting the repeat rate unnecessarily as it
 			// restarts the worker
 			if(this.RepeatingWorkerRate != repeatRate)
 				SetRepeatRate(repeatRate);
