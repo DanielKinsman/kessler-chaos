@@ -42,7 +42,7 @@ namespace kesslerchaos
 		private Queue<GameObject> shrapnel;
 		public Vector3 debrisOrigin;
 		public float duration = 30.0f;
-		public double eventStart;
+		public double eventStart = -60.0;
 		public float intensity = 1.0f;
 		public int worstDebrisCount = 250;
 
@@ -84,130 +84,13 @@ namespace kesslerchaos
 						return;
 					}
 
-					// See if we should spawn a new debris cloud encounter:
-					// 	* no encounter in atmosphere or below max terrain height
-					// 	* higher likelyhood the lower you are
-					// 	* higher likelyhood depending on CountDebris() and worstDebrisCount
-					// 	* higher likelyhood the longer it's been since the last debris cloud encounter
-
-					if(FlightGlobals.ActiveVessel.atmDensity > 0.0)
-						return;
-
-					// Should be using time warp altitudes to determine the correct thresholds here,
-					// but the ksp API is a dog's breakfast.
-					// This hack isn't much better and will break under different cultures,
-					// future updates, real solar system mod. planet factory mod etc.
-					// todo fix it!
-					var thresholds = new Dictionary<string, double>()
-					{
-						{"Sun", 3270000.0},
-						{"Moho", 10000.0},
-						{"Eve", 97000.0},
-						{"Gilly", 8000.0},
-						{"Kerbin", 70000.0},
-						{"Mun", 5000.0},
-						{"Minmus", 3000.0},
-						{"Duna", 42000.0},
-						{"Ike", 5000.0},
-						{"Dres", 10000.0},
-						{"Jool", 140000.0},
-						{"Laythe", 30000.0},
-						{"Vall", 25000.0},
-						{"Tylo", 30000.0},
-						{"Bop", 25000.0},
-						{"Pol", 5000.0},
-						{"Eeloo", 4000.0}
-					};
-
-					/*for(int i = 0; i < TimeWarp.fetch.altitudeLimits.Length; i++)
-					{
-						LogFormatted_DebugOnly("i {0}, tw alt limit {1}, tw warp rate {2}, alt limit {3}, mult {4}, offset {5}",
-						                       i,
-						                       TimeWarp.fetch.altitudeLimits[i],
-						                       TimeWarp.fetch.warpRates[i],
-						                       FlightGlobals.currentMainBody.timeWarpAltitudeLimits[i],
-						                       FlightGlobals.currentMainBody.altitudeMultiplier,
-						                       FlightGlobals.currentMainBody.altitudeOffset
-						                       );
-					}*/
-
-
-					if(!thresholds.ContainsKey(FlightGlobals.currentMainBody.bodyName))
-					{
-						LogFormatted("Body {0} doesn't have an entry in this mod, no kessler debris will be created.", FlightGlobals.currentMainBody.bodyName);
-						return;
-					}
-
-					if(FlightGlobals.ship_altitude <= thresholds[FlightGlobals.currentMainBody.bodyName])
-						return;
-
-					var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / thresholds[FlightGlobals.currentMainBody.bodyName]);
-					var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);
-					var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
-					var roll = UnityEngine.Random.value;
-					LogFormatted_DebugOnly("Debris encounter chance {0} * {1} * {2} = {3} > {4}?",
-					                       altitudeMultiplier,
-					                       litterMultiplier,
-					                       frequencyMultiplier,
-					                       altitudeMultiplier * litterMultiplier * frequencyMultiplier,
-					                       roll);
-
-					if(roll <= altitudeMultiplier * litterMultiplier * frequencyMultiplier)
+					if(CheckForNewDebrisEncounter(elapsed))
 						NewDebrisEncounter();
 
 					return;
 				}
 
-				// Modify the number of debris particles spawned depending on if we are
-				// at the beginning, middle or end of the encounter.
-				// More in the middle, less at either end.
-				var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed);
-				var spawnRateModifier = 1.0f - (timeFromPeakIntensity / (duration/2.0f));
-				var spawnCount = (int)Math.Ceiling((maxSpawnCount * TimeWarp.CurrentRate * intensity) * spawnRateModifier);
-
-				for(int i = 0; i < spawnCount; i++)
-				{
-					// Recycle old shrapnel particles using a queue so we don't put too much load
-					// on the physics / rendering engines.
-					GameObject shrap;
-					if(shrapnel.Count < maxShrapnel)
-					{
-						shrap = GameObject.CreatePrimitive(PrimitiveType.Cube);
-						shrap.name = "Kessler chaos debris";
-						shrap.AddComponent ("Rigidbody");
-						shrap.rigidbody.useGravity = false;
-						shrap.rigidbody.mass = 0.03f;
-					}
-					else
-					{
-						shrap = this.shrapnel.Dequeue();
-						shrap.rigidbody.angularVelocity = Vector3.zero;
-						shrap.transform.rotation = new Quaternion();
-					}
-
-					// get ship transform
-					// set shrapnel transform to ship transform
-					// move it away a distance
-					// give it a shove towards the ship
-					// splosions
-
-					shrap.transform.position = FlightGlobals.ActiveVessel.transform.position + debrisOrigin;
-					shrap.transform.LookAt(FlightGlobals.ActiveVessel.transform.position);
-
-					// forward is (0, 0, 1)
-					shrap.transform.Translate(
-						RandomPlusOrMinus() * lateralSpread,
-						RandomPlusOrMinus() * lateralSpread,
-						UnityEngine.Random.value * longitudinalSpread);
-
-					shrap.rigidbody.velocity = shrap.transform.TransformDirection(
-						RandomPlusOrMinus() * lateralVelocitySpread,
-						RandomPlusOrMinus() * lateralVelocitySpread,
-						this.speed + RandomPlusOrMinus() * longitudinalVelocitySpread);
-
-					shrap.rigidbody.angularVelocity = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
-					this.shrapnel.Enqueue(shrap);
-				}
+				SpawnDebrisParticles(elapsed);
 			}
 			catch(Exception e)
 			{
@@ -215,6 +98,77 @@ namespace kesslerchaos
 				throw;
 			}
         }
+
+		/// <summary>
+		/// See if we should spawn a new debris cloud encounter.
+		/// </summary>
+		/// <returns>
+		/// True if we should spawn a new debris encounter.
+		/// </returns>
+		/// <param name='elapsed'>
+		/// The time that has elapsed since the start of the last encounter.
+		/// </param>
+		public bool CheckForNewDebrisEncounter(double elapsed)
+		{
+			// 	* no encounter in atmosphere or below max terrain height
+			// 	* higher likelyhood the lower you are
+			// 	* higher likelyhood depending on CountDebris() and worstDebrisCount
+			// 	* higher likelyhood the longer it's been since the last debris cloud encounter
+
+			if(FlightGlobals.ActiveVessel.atmDensity > 0.0)
+				return false;
+
+			// Should be using time warp altitudes to determine the correct thresholds here,
+			// but the ksp API is a dog's breakfast.
+			// This hack isn't much better and will break under different cultures,
+			// future updates, real solar system mod. planet factory mod etc.
+			// todo fix it!
+			var thresholds = new Dictionary<string, double>()
+			{
+				{"Sun", 3270000.0},
+				{"Moho", 10000.0},
+				{"Eve", 97000.0},
+				{"Gilly", 8000.0},
+				{"Kerbin", 70000.0},
+				{"Mun", 5000.0},
+				{"Minmus", 3000.0},
+				{"Duna", 42000.0},
+				{"Ike", 5000.0},
+				{"Dres", 10000.0},
+				{"Jool", 140000.0},
+				{"Laythe", 30000.0},
+				{"Vall", 25000.0},
+				{"Tylo", 30000.0},
+				{"Bop", 25000.0},
+				{"Pol", 5000.0},
+				{"Eeloo", 4000.0}
+			};
+
+			if(!thresholds.ContainsKey(FlightGlobals.currentMainBody.bodyName))
+			{
+				LogFormatted("Body {0} doesn't have an entry in this mod, no kessler debris will be created.", FlightGlobals.currentMainBody.bodyName);
+				return false;
+			}
+
+			if(FlightGlobals.ship_altitude <= thresholds[FlightGlobals.currentMainBody.bodyName])
+				return false;
+
+			var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / thresholds[FlightGlobals.currentMainBody.bodyName]);
+			var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);
+			var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
+			var roll = UnityEngine.Random.value;
+			LogFormatted_DebugOnly("Debris encounter chance {0} * {1} * {2} = {3} > {4}?",
+			                       altitudeMultiplier,
+			                       litterMultiplier,
+			                       frequencyMultiplier,
+			                       altitudeMultiplier * litterMultiplier * frequencyMultiplier,
+			                       roll);
+
+			if(roll <= altitudeMultiplier * litterMultiplier * frequencyMultiplier)
+				return true;
+
+			return false;
+		}
 
 		/// <summary>
 		/// Sets up a new debris cloud encounter.
@@ -241,6 +195,66 @@ namespace kesslerchaos
 			// restarts the worker
 			if(this.RepeatingWorkerRate != repeatRate)
 				SetRepeatRate(repeatRate);
+		}
+
+		/// <summary>
+		/// Spawns the debris particles.
+		/// </summary>
+		/// <param name='elapsed'>
+		/// The time that has elapsed since the start of the encounter.
+		/// </param>
+		public void SpawnDebrisParticles(double elapsed)
+		{
+			// Modify the number of debris particles spawned depending on if we are
+			// at the beginning, middle or end of the encounter.
+			// More in the middle, less at either end.
+			var timeFromPeakIntensity = Math.Abs(duration/2.0f - elapsed);
+			var spawnRateModifier = 1.0f - (timeFromPeakIntensity / (duration/2.0f));
+			var spawnCount = (int)Math.Ceiling((maxSpawnCount * TimeWarp.CurrentRate * intensity) * spawnRateModifier);
+
+			for(int i = 0; i < spawnCount; i++)
+			{
+				// Recycle old shrapnel particles using a queue so we don't put too much load
+				// on the physics / rendering engines.
+				GameObject shrap;
+				if(shrapnel.Count < maxShrapnel)
+				{
+					shrap = GameObject.CreatePrimitive(PrimitiveType.Cube);
+					shrap.name = "Kessler chaos debris";
+					shrap.AddComponent ("Rigidbody");
+					shrap.rigidbody.useGravity = false;
+					shrap.rigidbody.mass = 0.03f;
+				}
+				else
+				{
+					shrap = this.shrapnel.Dequeue();
+					shrap.rigidbody.angularVelocity = Vector3.zero;
+					shrap.transform.rotation = new Quaternion();
+				}
+
+				// get ship transform
+				// set shrapnel transform to ship transform
+				// move it away a distance
+				// give it a shove towards the ship
+				// splosions
+
+				shrap.transform.position = FlightGlobals.ActiveVessel.transform.position + debrisOrigin;
+				shrap.transform.LookAt(FlightGlobals.ActiveVessel.transform.position);
+
+				// forward is (0, 0, 1)
+				shrap.transform.Translate(
+					RandomPlusOrMinus() * lateralSpread,
+					RandomPlusOrMinus() * lateralSpread,
+					UnityEngine.Random.value * longitudinalSpread);
+
+				shrap.rigidbody.velocity = shrap.transform.TransformDirection(
+					RandomPlusOrMinus() * lateralVelocitySpread,
+					RandomPlusOrMinus() * lateralVelocitySpread,
+					this.speed + RandomPlusOrMinus() * longitudinalVelocitySpread);
+
+				shrap.rigidbody.angularVelocity = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
+				this.shrapnel.Enqueue(shrap);
+			}
 		}
 
 		/// <summary>
