@@ -48,8 +48,8 @@
     <Compile Include="ksppluginframework\MonoBehaviourExtended.cs" />
     <Compile Include="ksppluginframework\MonoBehaviourWindow.cs" />
     <Compile Include="ksppluginframework\SkinsLibrary.cs" />
-    <Compile Include="main.cs" />
     <Compile Include="AutoLoadSaveOnStartup.cs" />
+    <Compile Include="flight.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
