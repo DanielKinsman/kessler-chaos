@@ -50,10 +50,7 @@ namespace kesslerchaos
         {
 			WindowCaption = "Kessler Chaos";
             WindowRect = new Rect(0, 0, 250, 50);
-
-#if DEBUG
             Visible = true;
-#endif
 
 			SetRepeatRate(idleRepeatRate);
             StartRepeatingWorker();
@@ -140,7 +137,7 @@ namespace kesslerchaos
 		/// <summary>
 		/// Sets up a new debris cloud encounter.
 		/// </summary>
-		public void NewDebrisEncounter()
+		public void NewDebrisEncounter(bool forceIntensity = false)
 		{
 			// set origin
 			// set duration
@@ -152,6 +149,7 @@ namespace kesslerchaos
 			debrisOrigin.Normalize();
 			debrisOrigin *= 2000.0f;
 			intensity = Math.Min(1.0f, debrisCount / (float)worstDebrisCount);
+			intensity = forceIntensity ? 1.0f : intensity;
 			duration = 30.0f;
 
 			LogFormatted("Debris cloud encountered, intensity {0}, duration {1}", intensity, duration);
@@ -242,17 +240,20 @@ namespace kesslerchaos
 			ClampToScreen = true;
 			TooltipsEnabled = false;
 
-			if (GUILayout.Button ("Fire!"))
-				NewDebrisEncounter();
+			if (GUILayout.Button ("Force debris cloud encounter"))
+				NewDebrisEncounter(true);
+
+			GUILayout.BeginHorizontal();
+            GUILayout.Label("Stock ksp debris count before we reach full chaos (lower for more encounters):");
+            this.worstDebrisCount=Convert.ToInt32(GUILayout.TextField(this.worstDebrisCount.ToString()));
+            GUILayout.EndHorizontal();
+
+#if DEBUG
+			GUILayout.Label("debug only options");
 
 			GUILayout.BeginHorizontal();
             GUILayout.Label("max spawn count");
             this.maxSpawnCount=Convert.ToInt32(GUILayout.TextField(this.maxSpawnCount.ToString()));
-            GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-            GUILayout.Label("maximum kessler syndrome at debris count of:");
-            this.worstDebrisCount=Convert.ToInt32(GUILayout.TextField(this.worstDebrisCount.ToString()));
             GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -284,6 +285,7 @@ namespace kesslerchaos
             GUILayout.Label("lateral velocity spread");
             this.lateralVelocitySpread=(float)Convert.ToDouble(GUILayout.TextField(this.lateralVelocitySpread.ToString()));
             GUILayout.EndHorizontal();
+#endif
         }
 
 		public static float RandomPlusOrMinus()
