@@ -115,45 +115,12 @@ namespace kesslerchaos
 			// 	* higher likelyhood depending on CountDebris() and worstDebrisCount
 			// 	* higher likelyhood the longer it's been since the last debris cloud encounter
 
-			if(FlightGlobals.ActiveVessel.atmDensity > 0.0)
+			float minDebrisAltitude = Math.Max(FlightGlobals.currentMainBody.maxAtmosphereAltitude, FlightGlobals.currentMainBody.timeWarpAltitudeLimits[1]);
+
+			if(FlightGlobals.ship_altitude < minDebrisAltitude)
 				return false;
 
-			// Should be using time warp altitudes to determine the correct thresholds here,
-			// but the ksp API is a dog's breakfast.
-			// This hack isn't much better and will break under different cultures,
-			// future updates, real solar system mod. planet factory mod etc.
-			// todo fix it!
-			var thresholds = new Dictionary<string, double>()
-			{
-				{"Sun", 3270000.0},
-				{"Moho", 10000.0},
-				{"Eve", 97000.0},
-				{"Gilly", 8000.0},
-				{"Kerbin", 70000.0},
-				{"Mun", 5000.0},
-				{"Minmus", 3000.0},
-				{"Duna", 42000.0},
-				{"Ike", 5000.0},
-				{"Dres", 10000.0},
-				{"Jool", 140000.0},
-				{"Laythe", 30000.0},
-				{"Vall", 25000.0},
-				{"Tylo", 30000.0},
-				{"Bop", 25000.0},
-				{"Pol", 5000.0},
-				{"Eeloo", 4000.0}
-			};
-
-			if(!thresholds.ContainsKey(FlightGlobals.currentMainBody.bodyName))
-			{
-				LogFormatted("Body {0} doesn't have an entry in this mod, no kessler debris will be created.", FlightGlobals.currentMainBody.bodyName);
-				return false;
-			}
-
-			if(FlightGlobals.ship_altitude <= thresholds[FlightGlobals.currentMainBody.bodyName])
-				return false;
-
-			var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / thresholds[FlightGlobals.currentMainBody.bodyName]);
+			var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / minDebrisAltitude);
 			var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);
 			var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
 			var roll = UnityEngine.Random.value;
