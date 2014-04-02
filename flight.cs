@@ -26,8 +26,8 @@ using UnityEngine;
 
 namespace kesslerchaos
 {
-    [KSPAddon(KSPAddon.Startup.Flight,false)]
-    public class MBExtended : MonoBehaviourWindow
+    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    public class FlightBehaviour : MonoBehaviourWindow
     {
 		public bool fire = false;
 		public float speed = 500.0f;
@@ -45,6 +45,9 @@ namespace kesslerchaos
 		public double eventStart = -60.0;
 		public float intensity = 1.0f;
 		public int worstDebrisCount = 250;
+		private bool timeWarpHighAllowedPreviously;
+		private bool blockingTimeWarp = false;
+		private object blockTimeWarpLock = new object();
 
         internal override void Awake()
         {
@@ -62,6 +65,7 @@ namespace kesslerchaos
 		{
 			base.OnDestroy();
 			this.shrapnel.Clear();
+			RestoreTimeWarp();
 		}
 
         internal override void RepeatingWorker()
@@ -75,6 +79,7 @@ namespace kesslerchaos
 					// restarts the worker
 					if(this.RepeatingWorkerRate != idleRepeatRate)
 					{
+						RestoreTimeWarp();
 						// We just finished a debris cloud encounter
 						SetRepeatRate(idleRepeatRate);
 						// todo clean up shrapnel
@@ -160,6 +165,8 @@ namespace kesslerchaos
 			// restarts the worker
 			if(this.RepeatingWorkerRate != repeatRate)
 				SetRepeatRate(repeatRate);
+
+			BlockTimeWarp();
 		}
 
 		/// <summary>
@@ -291,6 +298,46 @@ namespace kesslerchaos
 		public static float RandomPlusOrMinus()
 		{
 			return UnityEngine.Random.value - 0.5f;
+		}
+
+		public void BlockTimeWarp()
+		{
+			// Probably not multithreaded here but what the hell
+			lock(this.blockTimeWarpLock)
+			{
+				if(this.blockingTimeWarp)
+				{
+					LogFormatted_DebugOnly("Already blocking time warp!");
+					return;
+				}
+
+				timeWarpHighAllowedPreviously = HighLogic.CurrentGame.Parameters.Flight.CanTimeWarpHigh;
+				this.blockingTimeWarp = true;
+			}
+
+			LogFormatted_DebugOnly("Blocking time warp");
+			TimeWarp.SetRate(0, false);
+
+			// This is a dirty hack and could conflict with other mods trying the same trick
+			// Could also get stuck if the mod dies due to an exception
+			HighLogic.CurrentGame.Parameters.Flight.CanTimeWarpHigh = false;
+		}
+
+		public void RestoreTimeWarp()
+		{
+			// Probably not multithreaded here but what the hell
+			LogFormatted_DebugOnly("Restoring time warp");
+			lock(this.blockTimeWarpLock)
+			{
+				if(!this.blockingTimeWarp)
+				{
+					LogFormatted_DebugOnly("Not currently blocking time warp!");
+					return;
+				}
+
+				HighLogic.CurrentGame.Parameters.Flight.CanTimeWarpHigh = timeWarpHighAllowedPreviously;
+				this.blockingTimeWarp = false;
+			}
 		}
     }
 }

@@ -27,7 +27,6 @@ Upcoming feature wishlist
 * Better collision detection (possibly slow moving but invisible colliders)
 * Improved graphical effects
 * Sound effects for the small impacts that don't create explosions
-* Block timewarp when encountering a debris cloud (no cheating)
 * Allow debris clouds to affect "on rails" vessles
 * Debris detector vessel parts to provide alarms and early warnings
 * Debris mitigation vessel parts such as laser brooms and "deflector dishes"
