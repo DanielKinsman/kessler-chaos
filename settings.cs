@@ -20,6 +20,7 @@ along with Kessler Chaos.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
+using System.IO;
 using KSP;
 using UnityEngine;
 
@@ -121,16 +122,14 @@ namespace kesslerchaos
 			}
 		}
 
-		public Settings() : base(HighLogic.SaveFolder)
+		public Settings()
 		{
-			// This will save settings in the kessler chaos plugin directory
-			// (KSP_linux/GameData/kesslerchaos/). Should really find the proper,
-			// full path to the game save folder. Stuffed if I know where the ksp
-			// api has this info stashed though.
-			// HighLogic.SaveFolder just returns the savegame name (e.g. "default").
-			// Besides, ksp savegames don't even go to the user's home directory and
-			// instead write to the application directory... whole thing is dodgy.
-			// Could use ScenarioModule but that seems like overkill.
+			// This will save settings in the same directory as the savegames.
+			// KSP is naughty and stores savegames in the application directory.
+			this.FilePath = Path.Combine(
+								Path.Combine(KSPUtil.ApplicationRootPath, "saves"),
+								Path.Combine(HighLogic.SaveFolder, "kesslerchaos_settings")
+							);
 			Load();
 		}
 	}
