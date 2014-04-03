@@ -58,4 +58,9 @@
     <Folder Include="ksppluginframework\" />
     <Folder Include="ksp_toolbar\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="toolbaricon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

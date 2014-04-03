@@ -407,7 +407,9 @@ namespace kesslerchaos {
 	/// </example>
 	/// <seealso cref="IButton.Visibility"/>
 	public class GameScenesVisibility : IVisibility {
+#pragma warning disable 0414
 		private GameScenes[] gameScenes;
+#pragma warning restore 0414
 
 		public bool Visible {
 			get {

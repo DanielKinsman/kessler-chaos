@@ -65,7 +65,7 @@ namespace kesslerchaos
 				showGUIButton = ToolbarManager.Instance.add(SettingsBehaviour.TOOLBAR_NAMESPACE, "KCflight");
 				showGUIButton.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
 				showGUIButton.ToolTip = WindowCaption;
-				showGUIButton.TexturePath = "kesslerchaos/toolbaricon";
+				showGUIButton.TexturePath = SettingsBehaviour.TOOLBAR_ICON;
 				showGUIButton.OnClick += (e) => this.Visible = !this.Visible;
 			}
 			else

@@ -29,6 +29,7 @@ namespace kesslerchaos
 	public class SettingsBehaviour: MonoBehaviourWindow
 	{
 		public const string TOOLBAR_NAMESPACE = "kesslerchaos";
+		public const string TOOLBAR_ICON = "kesslerchaos/toolbaricon";// todo breaks on windows?
 		public Settings settings{get; private set;}
 		private IButton showGUIButton;
 
@@ -43,7 +44,7 @@ namespace kesslerchaos
 				showGUIButton = ToolbarManager.Instance.add(TOOLBAR_NAMESPACE, "KCsettings");
 				showGUIButton.Visibility = new GameScenesVisibility(GameScenes.SPACECENTER);
 				showGUIButton.ToolTip = WindowCaption;
-				showGUIButton.TexturePath = "kesslerchaos/toolbaricon";
+				showGUIButton.TexturePath = TOOLBAR_ICON;
 				showGUIButton.OnClick += (e) => this.Visible = !this.Visible;
 			}
 			else
