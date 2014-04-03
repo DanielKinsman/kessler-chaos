@@ -51,9 +51,11 @@
     <Compile Include="AutoLoadSaveOnStartup.cs" />
     <Compile Include="flight.cs" />
     <Compile Include="settings.cs" />
+    <Compile Include="ksp_toolbar\ToolbarWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="ksppluginframework\" />
+    <Folder Include="ksp_toolbar\" />
   </ItemGroup>
 </Project>

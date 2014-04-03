@@ -48,6 +48,7 @@ namespace kesslerchaos
 		private bool blockingTimeWarp = false;
 		private object blockTimeWarpLock = new object();
 		private Settings settings;
+		private IButton showGUIButton;
 
         internal override void Awake()
         {
@@ -57,7 +58,21 @@ namespace kesslerchaos
 
 			WindowCaption = "Kessler Chaos";
             WindowRect = new Rect(0, 0, 250, 50);
-            Visible = true;
+
+			if(ToolbarManager.ToolbarAvailable)
+			{
+				Visible = false;
+				showGUIButton = ToolbarManager.Instance.add(SettingsBehaviour.TOOLBAR_NAMESPACE, "KCflight");
+				showGUIButton.Visibility = new GameScenesVisibility(GameScenes.FLIGHT);
+				showGUIButton.ToolTip = WindowCaption;
+				showGUIButton.TexturePath = "kesslerchaos/toolbaricon";
+				showGUIButton.OnClick += (e) => this.Visible = !this.Visible;
+			}
+			else
+			{
+				Visible = true;
+				showGUIButton = null;
+			}
 
 			SetRepeatRate(idleRepeatRate);
             StartRepeatingWorker();
@@ -70,6 +85,8 @@ namespace kesslerchaos
 			base.OnDestroy();
 			this.shrapnel.Clear();
 			RestoreTimeWarp();
+			if(showGUIButton != null)
+				showGUIButton.Destroy();
 		}
 
         internal override void RepeatingWorker()

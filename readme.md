@@ -41,7 +41,7 @@ output directory to ksp's GameData folder.
 If you've just downloaded the pre-built zip file, extract zip to the
 "GameData" subdirectory of your Kerbal Space Program install.
 
-Licences
+Licenses
 --------
 
 Kessler Chaos copyright 2014 Daniel Kinsman  
@@ -50,6 +50,10 @@ GNU General Public License v3
 KSP Plugin Framework copyright 2014 TriggerAu  
 MIT License  
 https://ksppluginframework.codeplex.com/
+
+ToolbarWrapper copyright 2013-2014 Maik Schreiber
+BSD 2-Clause License
+https://github.com/blizzy78/ksp_toolbar
 
 Known Issues
 ------------

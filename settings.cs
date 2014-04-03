@@ -28,17 +28,41 @@ namespace kesslerchaos
 	[KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
 	public class SettingsBehaviour: MonoBehaviourWindow
 	{
+		public const string TOOLBAR_NAMESPACE = "kesslerchaos";
 		public Settings settings{get; private set;}
+		private IButton showGUIButton;
 
 		internal override void Awake()
         {
 			WindowCaption = "Kessler Chaos Settings";
             WindowRect = new Rect(0, 0, 250, 50);
-            Visible = true;
+
+			if(ToolbarManager.ToolbarAvailable)
+			{
+				Visible = false;
+				showGUIButton = ToolbarManager.Instance.add(TOOLBAR_NAMESPACE, "KCsettings");
+				showGUIButton.Visibility = new GameScenesVisibility(GameScenes.SPACECENTER);
+				showGUIButton.ToolTip = WindowCaption;
+				showGUIButton.TexturePath = "kesslerchaos/toolbaricon";
+				showGUIButton.OnClick += (e) => this.Visible = !this.Visible;
+			}
+			else
+			{
+				Visible = true;
+				showGUIButton = null;
+			}
+
 			settings = new Settings();
         }
 
-		internal override void DrawWindow (int id)
+		internal override void OnDestroy()
+		{
+			base.OnDestroy();
+			if(showGUIButton != null)
+				showGUIButton.Destroy();
+		}
+
+		internal override void DrawWindow(int id)
 		{
 			DragEnabled = true;
 			ClampToScreen = true;
