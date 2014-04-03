@@ -44,13 +44,17 @@ namespace kesslerchaos
 		public float duration = 30.0f;
 		public double eventStart = -60.0;
 		public float intensity = 1.0f;
-		public int worstDebrisCount = 250;
 		private bool timeWarpHighAllowedPreviously;
 		private bool blockingTimeWarp = false;
 		private object blockTimeWarpLock = new object();
+		private Settings settings;
 
         internal override void Awake()
         {
+			settings = new Settings();
+			if(!settings.modEnabled)
+				return;
+
 			WindowCaption = "Kessler Chaos";
             WindowRect = new Rect(0, 0, 250, 50);
             Visible = true;
@@ -123,7 +127,7 @@ namespace kesslerchaos
 				return false;
 
 			var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / minDebrisAltitude);
-			var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)worstDebrisCount);
+			var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)settings.worstDebrisCount);
 			var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
 			var roll = UnityEngine.Random.value;
 			LogFormatted_DebugOnly("Debris encounter chance {0} * {1} * {2} = {3} > {4}?",
@@ -153,7 +157,7 @@ namespace kesslerchaos
 			debrisOrigin = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
 			debrisOrigin.Normalize();
 			debrisOrigin *= 2000.0f;
-			intensity = Math.Min(1.0f, debrisCount / (float)worstDebrisCount);
+			intensity = Math.Min(1.0f, debrisCount / (float)settings.worstDebrisCount);
 			intensity = forceIntensity ? 1.0f : intensity;
 			duration = 30.0f;
 
@@ -252,13 +256,8 @@ namespace kesslerchaos
 			ClampToScreen = true;
 			TooltipsEnabled = false;
 
-			if (GUILayout.Button ("Force debris cloud encounter"))
+			if (GUILayout.Button ("Trigger max intensity debris cloud encounter"))
 				NewDebrisEncounter(true);
-
-			GUILayout.BeginHorizontal();
-            GUILayout.Label("Stock ksp debris count before we reach full chaos (lower for more encounters):");
-            this.worstDebrisCount=Convert.ToInt32(GUILayout.TextField(this.worstDebrisCount.ToString()));
-            GUILayout.EndHorizontal();
 
 #if DEBUG
 			GUILayout.Label("debug only options");

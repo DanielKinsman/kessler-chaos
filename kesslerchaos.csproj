@@ -50,6 +50,7 @@
     <Compile Include="ksppluginframework\SkinsLibrary.cs" />
     <Compile Include="AutoLoadSaveOnStartup.cs" />
     <Compile Include="flight.cs" />
+    <Compile Include="settings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
