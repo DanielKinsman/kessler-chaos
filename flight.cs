@@ -30,10 +30,10 @@ namespace kesslerchaos
     public class FlightBehaviour : MonoBehaviourWindow
     {
 		public bool fire = false;
-		public float speed = 500.0f;
+		public float speed = 437.5f;
 		public float longitudinalSpread = 1000.0f;
-		public float lateralSpread = 200.0f;
-		public float longitudinalVelocitySpread = 250.0f;
+		public float lateralSpread = 100.0f;
+		public float longitudinalVelocitySpread = 62.5f;
 		public float lateralVelocitySpread = 100.0f;
 		public int maxSpawnCount = 25;
 		public float repeatRate = 0.25f;
@@ -195,7 +195,12 @@ namespace kesslerchaos
 					shrap.name = "Kessler chaos debris";
 					shrap.AddComponent ("Rigidbody");
 					shrap.rigidbody.useGravity = false;
-					shrap.rigidbody.mass = 0.03f;
+					shrap.rigidbody.mass = 0.035f;
+					var collider = shrap.rigidbody.collider as BoxCollider;
+					if(collider == null)
+						LogFormatted("No box collider for kessler chaos shrapnel! You aren't going to get many collisions.");
+					else
+						collider.size *= 10.0f;
 				}
 				else
 				{
