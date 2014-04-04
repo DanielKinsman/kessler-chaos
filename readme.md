@@ -33,14 +33,14 @@ Upcoming feature wishlist
 Build and Installation
 ----------------------
 
-Open the solution with monodevelop, make sure the references to
-Assembly-CSharp.dll and UnityEngine.dll come from ksp's
-KSP_Data/Managed/ directory. Build it then copy kesslerchaos.dll from the
-output directory to ksp's GameData folder. Use the Makefile to generate
-a release zipfile.
-
-If you've just downloaded the pre-built zip file, extract zip to the
+To install from the pre-built zip file, extract the zip to the
 "GameData" subdirectory of your Kerbal Space Program install.
+
+To build from source, open the solution with monodevelop.
+Make sure the references to Assembly-CSharp.dll and UnityEngine.dll come
+from ksp's KSP_Data/Managed/ directory. Build it then copy
+kesslerchaos.dll from the output directory to ksp's GameData folder.
+Use the Makefile to generate a release zipfile.
 
 Licenses
 --------
@@ -52,8 +52,8 @@ KSP Plugin Framework copyright 2014 TriggerAu
 MIT License  
 https://ksppluginframework.codeplex.com/
 
-ToolbarWrapper copyright 2013-2014 Maik Schreiber
-BSD 2-Clause License
+ToolbarWrapper copyright 2013-2014 Maik Schreiber  
+BSD 2-Clause License  
 https://github.com/blizzy78/ksp_toolbar
 
 Known Issues
@@ -65,6 +65,7 @@ Changelog
 ---------
 
 v0.4:
+
 * Debris cloud forecast shown to user
 * GUI button to force debris cloud encounter
 * Adjustable settings per savegame
@@ -74,7 +75,8 @@ v0.4:
 * Allowed mod to work with mods that alter planet dimensions
 * Uses game simulation time instead of wall clock time
 
-v0.2
+v0.2:
+
 * First release
 
 Contact
