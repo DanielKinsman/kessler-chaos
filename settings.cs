@@ -76,9 +76,12 @@ namespace kesslerchaos
             GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-            GUILayout.Label("Stock ksp debris count before we reach full chaos (lower for more encounters):");
+            GUILayout.Label("Stock ksp debris in orbit before we reach full chaos (lower for more encounters):");
             settings.worstDebrisCount=Convert.ToInt32(GUILayout.TextField(settings.worstDebrisCount.ToString()));
             GUILayout.EndHorizontal();
+
+			if(showGUIButton == null)
+				GUILayout.Label("Install the Toolbar mod to hide this window");
 		}
 	}
 

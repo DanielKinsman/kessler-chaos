@@ -49,6 +49,7 @@ namespace kesslerchaos
 		private object blockTimeWarpLock = new object();
 		private Settings settings;
 		private IButton showGUIButton;
+		private int debrisCount;
 
         internal override void Awake()
         {
@@ -122,6 +123,30 @@ namespace kesslerchaos
 			}
         }
 
+		public double EncounterProbability(double elapsed)
+		{
+			// 	* no encounter in atmosphere or below max terrain height
+			// 	* higher likelyhood the lower you are
+			// 	* higher likelyhood depending on debrisCount and worstDebrisCount
+			// 	* higher likelyhood the longer it's been since the last debris cloud encounter
+
+			float minDebrisAltitude = Math.Max(FlightGlobals.currentMainBody.maxAtmosphereAltitude, FlightGlobals.currentMainBody.timeWarpAltitudeLimits[1]);
+
+			if(FlightGlobals.ship_altitude < minDebrisAltitude)
+				return 0.0f;
+
+			var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / minDebrisAltitude);
+			var litterMultiplier = Math.Min(1.0f, debrisCount / (float)settings.worstDebrisCount);
+			var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
+
+			return altitudeMultiplier * litterMultiplier * frequencyMultiplier;
+		}
+
+		public float EncounterIntensity()
+		{
+			return Math.Min(1.0f, debrisCount / (float)settings.worstDebrisCount);
+		}
+
 		/// <summary>
 		/// See if we should spawn a new debris cloud encounter.
 		/// </summary>
@@ -133,28 +158,18 @@ namespace kesslerchaos
 		/// </param>
 		public bool CheckForNewDebrisEncounter(double elapsed)
 		{
-			// 	* no encounter in atmosphere or below max terrain height
-			// 	* higher likelyhood the lower you are
-			// 	* higher likelyhood depending on CountDebris() and worstDebrisCount
-			// 	* higher likelyhood the longer it's been since the last debris cloud encounter
+			debrisCount = CountDebris();
 
-			float minDebrisAltitude = Math.Max(FlightGlobals.currentMainBody.maxAtmosphereAltitude, FlightGlobals.currentMainBody.timeWarpAltitudeLimits[1]);
-
-			if(FlightGlobals.ship_altitude < minDebrisAltitude)
+			var probability = EncounterProbability(elapsed);
+			if(probability == 0.0) //avoid the rng coming up with 0.0 too
 				return false;
 
-			var altitudeMultiplier = 1.0f / (FlightGlobals.ship_altitude / minDebrisAltitude);
-			var litterMultiplier = Math.Min(1.0f, CountDebris() / (float)settings.worstDebrisCount);
-			var frequencyMultiplier = Math.Min(1.0f, elapsed / (5.0f * 60.0f)); // after 5 minutes bring it on
 			var roll = UnityEngine.Random.value;
-			LogFormatted_DebugOnly("Debris encounter chance {0} * {1} * {2} = {3} > {4}?",
-			                       altitudeMultiplier,
-			                       litterMultiplier,
-			                       frequencyMultiplier,
-			                       altitudeMultiplier * litterMultiplier * frequencyMultiplier,
-			                       roll);
+			LogFormatted_DebugOnly("Debris encounter roll {0} < probability {1}?",
+			                       roll,
+			                       probability);
 
-			if(roll <= altitudeMultiplier * litterMultiplier * frequencyMultiplier)
+			if(roll < probability)
 				return true;
 
 			return false;
@@ -169,12 +184,10 @@ namespace kesslerchaos
 			// set duration
 			// set severity
 
-			var debrisCount = CountDebris();
-
 			debrisOrigin = new Vector3(RandomPlusOrMinus(), RandomPlusOrMinus(), RandomPlusOrMinus());
 			debrisOrigin.Normalize();
 			debrisOrigin *= 2000.0f;
-			intensity = Math.Min(1.0f, debrisCount / (float)settings.worstDebrisCount);
+			intensity = EncounterIntensity();
 			intensity = forceIntensity ? 1.0f : intensity;
 			duration = 30.0f;
 
@@ -273,8 +286,29 @@ namespace kesslerchaos
 			ClampToScreen = true;
 			TooltipsEnabled = false;
 
-			if (GUILayout.Button ("Trigger max intensity debris cloud encounter"))
+			var elapsed = Planetarium.GetUniversalTime() - eventStart;
+
+			GUILayout.Label("Debris Cloud Forecast");
+			GUILayout.BeginHorizontal(HighLogic.Skin.textArea);
+			GUILayout.Label(string.Format("Probability {0:N0}%", EncounterProbability(elapsed)*100.0));
+			GUILayout.Label(string.Format("Intensity {0:N0}%", EncounterIntensity()*100.0f));
+			GUILayout.EndHorizontal();
+
+			double minutesSinceLastEncounter = elapsed / 60.0f;
+			string minutesSinceLastEncounterDescription = minutesSinceLastEncounter > 60.0 ? "∞" : string.Format("{0:N1}", minutesSinceLastEncounter);
+
+			GUILayout.Label("Contributing factors");
+			GUILayout.BeginVertical(HighLogic.Skin.textArea);
+			GUILayout.Label(string.Format("Debris in orbit {0} / {1}", debrisCount, settings.worstDebrisCount));
+			GUILayout.Label(string.Format("Altitude {0:N2}km", FlightGlobals.ship_altitude / 1000.0));
+			GUILayout.Label(string.Format("Minutes since last encounter {0}", minutesSinceLastEncounterDescription));
+			GUILayout.EndVertical();
+
+			if(GUILayout.Button ("Trigger debris cloud"))
 				NewDebrisEncounter(true);
+
+			if(showGUIButton == null)
+				GUILayout.Label("Install the Toolbar mod to hide this window");
 
 #if DEBUG
 			GUILayout.Label("debug only options");
