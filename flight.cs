@@ -275,7 +275,12 @@ namespace kesslerchaos
 		{
 			var debris = FlightGlobals.Vessels.FindAll(
 				x => x.vesselType == VesselType.Debris &&
-				x.orbit.referenceBody.Equals(FlightGlobals.ActiveVessel.orbit.referenceBody));
+				x.orbit.referenceBody.Equals(FlightGlobals.ActiveVessel.orbit.referenceBody) &&
+				x.situation != Vessel.Situations.LANDED &&
+				x.situation != Vessel.Situations.PRELAUNCH &&
+				x.situation != Vessel.Situations.SPLASHED &&
+				x.situation != Vessel.Situations.SUB_ORBITAL
+				);
 
 			return debris.Count;
 		}

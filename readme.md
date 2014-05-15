@@ -64,6 +64,10 @@ See https://github.com/DanielKinsman/kessler-chaos/issues
 Changelog
 ---------
 
+v0.6:
+
+* Landed, splashed down and sub-orbital debris no longer counts
+
 v0.4:
 
 * Debris cloud forecast shown to user
